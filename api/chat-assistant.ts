@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { getGeminiClient } from '../src/lib/gemini';
+import { getGeminiClient } from '../src/lib/gemini.js';
 
 export const config = {
   api: {
