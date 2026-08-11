@@ -1,0 +1,6 @@
+{
+  "name": "Gestor de Demandas AI",
+  "description": "Registro, análise inteligente com IA (fotos, PDFs, planilhas e texto), categorização automática, controle de status e alertas de prazos.",
+  "requestFramePermissions": ["camera"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

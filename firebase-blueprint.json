@@ -1,0 +1,37 @@
+{
+  "entities": {
+    "demands": {
+      "title": "Demands",
+      "description": "Demandas de trabalho registradas, categorizadas e monitoradas",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "originalInputType": { "type": "string" },
+        "originalInputPreview": { "type": "string" },
+        "category": { "type": "string" },
+        "priority": { "type": "string" },
+        "status": { "type": "string" },
+        "requester": { "type": "string" },
+        "department": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" },
+        "deadline": { "type": "string" },
+        "estimatedHours": { "type": "number" },
+        "tags": { "type": "array", "items": { "type": "string" } },
+        "actionItems": { "type": "array", "items": { "type": "object" } },
+        "notes": { "type": "array", "items": { "type": "object" } },
+        "alertConfig": { "type": "object" },
+        "resolutionSummary": { "type": "string" }
+      },
+      "required": ["title", "status", "category", "priority"]
+    }
+  },
+  "securityRules": {
+    "demands": {
+      "read": "true",
+      "write": "true"
+    }
+  }
+}
