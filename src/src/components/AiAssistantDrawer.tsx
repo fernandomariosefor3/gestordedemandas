@@ -46,7 +46,8 @@ export const AiAssistantDrawer: React.FC<AiAssistantDrawerProps> = ({
     setLoading(true);
 
     try {
-      const response = await fetch('/api/gemini/chat-assistant', {
+    const apiUrl = '/api/chat-assistant';
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -55,7 +56,14 @@ export const AiAssistantDrawer: React.FC<AiAssistantDrawerProps> = ({
         })
       });
 
-      const data = await response.json();
+      let data: any;
+      const rawText = await response.text();
+      try {
+        data = JSON.parse(rawText);
+      } catch {
+        console.error('[AiAssistantDrawer] Resposta não-JSON:', rawText.substring(0, 500));
+        throw new Error(`Resposta inesperada do servidor (HTTP ${response.status})`);
+      }
       if (data.success && data.reply) {
         setMessages(prev => [
           ...prev,
@@ -69,7 +77,10 @@ export const AiAssistantDrawer: React.FC<AiAssistantDrawerProps> = ({
         throw new Error(data.error || 'Erro na resposta do assistente.');
       }
     } catch (err: any) {
-      console.error('Erro no assistente:', err);
+      console.error('[AiAssistantDrawer] Erro:', {
+        message: err.message,
+        stack: err.stack
+      });
       setMessages(prev => [
         ...prev,
         {

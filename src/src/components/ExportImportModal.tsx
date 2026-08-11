@@ -27,8 +27,9 @@ export const ExportImportModal: React.FC<ExportImportModalProps> = ({
     setIsProcessingBatch(true);
     setBatchSuccessMsg(null);
 
+    const apiUrl = '/api/batch-analyze';
     try {
-      const response = await fetch('/api/gemini/batch-analyze', {
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -37,8 +38,17 @@ export const ExportImportModal: React.FC<ExportImportModalProps> = ({
         })
       });
 
-      const resData = await response.json();
+      let resData: any;
+      const rawText = await response.text();
+      try {
+        resData = JSON.parse(rawText);
+      } catch {
+        console.error('[ExportImportModal] Resposta não-JSON:', rawText.substring(0, 500));
+        throw new Error(`Resposta inesperada do servidor (HTTP ${response.status}): ${rawText.substring(0, 200)}`);
+      }
+
       if (!response.ok || !resData.success) {
+        console.error('[ExportImportModal] Erro da API:', { url: apiUrl, status: response.status, body: resData });
         throw new Error(resData.error || 'Erro ao processar lote.');
       }
 

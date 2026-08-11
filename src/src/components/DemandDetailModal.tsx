@@ -111,8 +111,9 @@ export const DemandDetailModal: React.FC<DemandDetailModalProps> = ({
   // Generate AI Resolution Draft
   const handleGenerateAIResolution = async () => {
     setIsGeneratingResolution(true);
+    const apiUrl = '/api/chat-assistant';
     try {
-      const response = await fetch('/api/gemini/chat-assistant', {
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -121,21 +122,33 @@ export const DemandDetailModal: React.FC<DemandDetailModalProps> = ({
         })
       });
 
-      const data = await response.json();
+      let data: any;
+      const rawText = await response.text();
+      try {
+        data = JSON.parse(rawText);
+      } catch {
+        console.error('[DemandDetailModal] Resposta não-JSON:', rawText.substring(0, 500));
+        throw new Error(`Resposta inesperada do servidor (HTTP ${response.status})`);
+      }
+
       if (data.success && data.reply) {
         setResolutionDraft(data.reply);
-        
-        // Auto update resolution field in demand
         const updated: Demand = {
           ...demand,
           resolutionSummary: data.reply,
           updatedAt: new Date().toISOString()
         };
         onUpdate(updated);
+      } else {
+        console.error('[DemandDetailModal] Erro da API:', { url: apiUrl, status: response.status, body: data });
+        throw new Error(data?.error || 'Erro ao gerar resolução com a IA.');
       }
-    } catch (err) {
-      console.error('Erro ao gerar resolução com IA:', err);
-      alert('Erro ao comunicar com a IA Gemini para gerar resolução.');
+    } catch (err: any) {
+      console.error('[DemandDetailModal] Erro ao gerar resolução:', {
+        message: err.message,
+        stack: err.stack
+      });
+      alert(`Erro ao comunicar com a IA Gemini: ${err.message}`);
     } finally {
       setIsGeneratingResolution(false);
     }

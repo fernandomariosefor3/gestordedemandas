@@ -147,7 +147,8 @@ export const NewDemandModal: React.FC<NewDemandModalProps> = ({
         payloadContent = textContent || fileBase64;
       }
 
-      const response = await fetch('/api/gemini/analyze-demand', {
+      const apiUrl = '/api/analyze-demand';
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -158,9 +159,17 @@ export const NewDemandModal: React.FC<NewDemandModalProps> = ({
         })
       });
 
-      const resData = await response.json();
+      let resData: any;
+      const rawText = await response.text();
+      try {
+        resData = JSON.parse(rawText);
+      } catch {
+        console.error('[NewDemandModal] Resposta não-JSON recebida:', rawText.substring(0, 500));
+        throw new Error(`Resposta inesperada do servidor (HTTP ${response.status}): ${rawText.substring(0, 200)}`);
+      }
 
       if (!response.ok || !resData.success) {
+        console.error('[NewDemandModal] Erro da API:', { url: apiUrl, status: response.status, body: resData });
         throw new Error(resData.error || 'Erro ao analisar com a Inteligência Artificial.');
       }
 
@@ -192,7 +201,10 @@ export const NewDemandModal: React.FC<NewDemandModalProps> = ({
       setActionItems(data.actionItems || []);
 
     } catch (err: any) {
-      console.error('Erro de análise:', err);
+      console.error('[NewDemandModal] Erro de análise:', {
+        message: err.message,
+        stack: err.stack
+      });
       setAnalysisError(err.message || 'Falha na conexão com a IA Gemini.');
     } finally {
       setIsAnalyzing(false);
