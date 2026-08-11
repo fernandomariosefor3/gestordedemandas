@@ -147,7 +147,7 @@ export const NewDemandModal: React.FC<NewDemandModalProps> = ({
         payloadContent = textContent || fileBase64;
       }
 
-      const response = await fetch('/api/gemini/analyze-demand', {
+      const response = await fetch('/api/analyze-demand', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

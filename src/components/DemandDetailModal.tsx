@@ -112,7 +112,7 @@ export const DemandDetailModal: React.FC<DemandDetailModalProps> = ({
   const handleGenerateAIResolution = async () => {
     setIsGeneratingResolution(true);
     try {
-      const response = await fetch('/api/gemini/chat-assistant', {
+      const response = await fetch('/api/chat-assistant', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

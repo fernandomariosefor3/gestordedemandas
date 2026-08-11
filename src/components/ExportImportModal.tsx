@@ -28,7 +28,7 @@ export const ExportImportModal: React.FC<ExportImportModalProps> = ({
     setBatchSuccessMsg(null);
 
     try {
-      const response = await fetch('/api/gemini/batch-analyze', {
+      const response = await fetch('/api/batch-analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

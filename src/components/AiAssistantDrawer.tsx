@@ -46,7 +46,7 @@ export const AiAssistantDrawer: React.FC<AiAssistantDrawerProps> = ({
     setLoading(true);
 
     try {
-      const response = await fetch('/api/gemini/chat-assistant', {
+      const response = await fetch('/api/chat-assistant', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
