@@ -134,7 +134,7 @@ Diretrizes para os campos:
     }
 
     const response = await ai.models.generateContent({
-      model: 'gemini-2.0-flash',
+      model: 'gemini-1.5-flash',
       contents: contentsPayload,
       config: {
         systemInstruction,
@@ -209,7 +209,7 @@ A data de referência de hoje é ${new Date().toISOString().split('T')[0]}.`;
     };
 
     const response = await ai.models.generateContent({
-      model: 'gemini-2.0-flash',
+      model: 'gemini-1.5-flash',
       contents: `Extraia cada uma das demandas presentes no seguinte conteúdo de arquivo/planilha (${fileName || 'lote'}):\n\n${content}`,
       config: {
         systemInstruction,
@@ -263,7 +263,7 @@ Solicitação do usuário:
 "${message}"`;
 
     const response = await ai.models.generateContent({
-      model: 'gemini-2.0-flash',
+      model: 'gemini-1.5-flash',
       contents: prompt,
       config: {
         systemInstruction
