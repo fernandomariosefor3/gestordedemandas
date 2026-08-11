@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { getGeminiClient, safeParseJson, Type } from './_gemini';
+import { getGeminiClient, safeParseJson, Type } from '../src/lib/gemini';
 
 // Vercel Serverless: increase body size limit for PDF/image base64
 export const config = {
