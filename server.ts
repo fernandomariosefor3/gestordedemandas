@@ -6,6 +6,30 @@ import { createServer as createViteServer } from 'vite';
 
 dotenv.config();
 
+// ------------------------------------------------------------------
+// Utility: Safe JSON Parser (handles markdown wrappers and empty strings)
+// ------------------------------------------------------------------
+function safeParseJson<T>(raw: string | undefined | null, fallback: T): T {
+  if (!raw || raw.trim() === '') {
+    console.warn('[safeParseJson] Resposta vazia ou undefined recebida da API do Gemini.');
+    return fallback;
+  }
+
+  // Remove blocos de markdown: ```json ... ``` ou ``` ... ```
+  const cleaned = raw
+    .replace(/^```[\w]*\n?/m, '')
+    .replace(/\n?```$/m, '')
+    .trim();
+
+  try {
+    return JSON.parse(cleaned) as T;
+  } catch (parseError: any) {
+    console.error('[safeParseJson] Falha ao fazer JSON.parse. Erro:', parseError.message);
+    console.error('[safeParseJson] String bruta recebida (primeiros 500 chars):', raw.substring(0, 500));
+    return fallback;
+  }
+}
+
 const app = express();
 const PORT = 3000;
 
@@ -110,7 +134,7 @@ Diretrizes para os campos:
     }
 
     const response = await ai.models.generateContent({
-      model: 'gemini-3.6-flash',
+      model: 'gemini-2.0-flash',
       contents: contentsPayload,
       config: {
         systemInstruction,
@@ -119,10 +143,24 @@ Diretrizes para os campos:
       }
     });
 
-    const parsedData = JSON.parse(response.text || '{}');
+    // Log da resposta bruta para diagnóstico no Vercel Functions
+    console.log('[analyze-demand] Resposta bruta do Gemini:', response.text?.substring(0, 300));
+
+    const parsedData = safeParseJson<Record<string, any>>(response.text, {});
+
+    if (!parsedData || Object.keys(parsedData).length === 0) {
+      console.error('[analyze-demand] Gemini retornou objeto vazio ou falhou no parse.');
+      return res.status(502).json({ error: 'A IA não conseguiu extrair dados do arquivo. Tente novamente ou use um arquivo diferente.' });
+    }
+
     return res.json({ success: true, data: parsedData });
   } catch (error: any) {
-    console.error('Erro no /api/gemini/analyze-demand:', error);
+    const status = error?.status || error?.httpStatus || 500;
+    console.error('[analyze-demand] ERRO:', {
+      message: error.message,
+      status,
+      details: error?.errorDetails || error?.response || null
+    });
     return res.status(500).json({ error: error.message || 'Erro ao analisar demanda com Gemini.' });
   }
 });
@@ -171,7 +209,7 @@ A data de referência de hoje é ${new Date().toISOString().split('T')[0]}.`;
     };
 
     const response = await ai.models.generateContent({
-      model: 'gemini-3.6-flash',
+      model: 'gemini-2.0-flash',
       contents: `Extraia cada uma das demandas presentes no seguinte conteúdo de arquivo/planilha (${fileName || 'lote'}):\n\n${content}`,
       config: {
         systemInstruction,
@@ -180,10 +218,18 @@ A data de referência de hoje é ${new Date().toISOString().split('T')[0]}.`;
       }
     });
 
-    const demands = JSON.parse(response.text || '[]');
+    // Log da resposta bruta para diagnóstico no Vercel Functions
+    console.log('[batch-analyze] Resposta bruta do Gemini:', response.text?.substring(0, 300));
+
+    const demands = safeParseJson<any[]>(response.text, []);
     return res.json({ success: true, count: demands.length, demands });
   } catch (error: any) {
-    console.error('Erro no /api/gemini/batch-analyze:', error);
+    const status = error?.status || error?.httpStatus || 500;
+    console.error('[batch-analyze] ERRO:', {
+      message: error.message,
+      status,
+      details: error?.errorDetails || error?.response || null
+    });
     return res.status(500).json({ error: error.message || 'Erro no processamento em lote com Gemini.' });
   }
 });
@@ -217,16 +263,26 @@ Solicitação do usuário:
 "${message}"`;
 
     const response = await ai.models.generateContent({
-      model: 'gemini-3.6-flash',
+      model: 'gemini-2.0-flash',
       contents: prompt,
       config: {
         systemInstruction
       }
     });
 
+    if (!response.text) {
+      console.warn('[chat-assistant] Gemini retornou resposta vazia.');
+      return res.status(502).json({ error: 'A IA não gerou uma resposta. Tente novamente.' });
+    }
+
     return res.json({ success: true, reply: response.text });
   } catch (error: any) {
-    console.error('Erro no /api/gemini/chat-assistant:', error);
+    const status = error?.status || error?.httpStatus || 500;
+    console.error('[chat-assistant] ERRO:', {
+      message: error.message,
+      status,
+      details: error?.errorDetails || error?.response || null
+    });
     return res.status(500).json({ error: error.message || 'Erro no assistente AI.' });
   }
 });
